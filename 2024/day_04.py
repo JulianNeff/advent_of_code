@@ -1,23 +1,21 @@
-# Copyright: https://github.com/michaelerne/adventofcode-2024/blob/main/template.py
-
 from run_util import run_puzzle
 
 def parse_data(data):
-    matrix = [list(line) for line in data.split("\n") if line.strip()]
-    return matrix
+    return [list(line) for line in data.splitlines() if line]
 
 def part_a(data):
     matrix = parse_data(data)
     length = range(len(matrix))
     count = 0
-    dirs = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
-    for y in length:
-        for x in length:
-            for dy, dx in dirs:
-                if 0 <= y + 3*dy < len(matrix) and 0 <= x + 3*dx < len(matrix):
-                    if matrix[y][x] == 'X' and matrix[y + dy][x + dx] == 'M' and matrix[y + 2 * dy][x + 2 * dx] == 'A' and matrix[y + 3 * dy][x + 3 * dx] == 'S':
+    directions = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+    for row in length:
+        for col in length:
+            for d_row, d_col in directions:
+                if 0 <= row + 3 * d_row < len(matrix) and 0 <= col + 3 * d_col < len(matrix[0]):
+                    if matrix[row][col] == 'X' and matrix[row + d_row][col + d_col] == 'M' and matrix[row + 2 * d_row][col + 2 * d_col] == 'A' and matrix[row + 3 * d_row][col + 3 * d_col] == 'S':
                         count += 1
     return count
+
 
 
 def part_b(data):

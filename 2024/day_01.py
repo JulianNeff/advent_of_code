@@ -2,19 +2,15 @@ from run_util import run_puzzle
 from collections import Counter
 
 def parse_data(data):
-    list1, list2 = [], []
+    first_list, second_list = zip(*[map(int, line.split()) for line in data.splitlines()])
+    return list(first_list), list(second_list)
 
-    for line in data.splitlines():
-        num1, num2 = map(int, line.split())
-        list1.append(num1)
-        list2.append(num2)
-    return list1, list2
 
 def part_a(data):
     list1, list2 = parse_data(data)
     list1_sorted = sorted(list1)
     list2_sorted = sorted(list2)
-    return sum(abs(a - b) for a, b in zip(list1_sorted, list2_sorted))
+    return sum(abs(list1_sorted[i] - list2_sorted[i]) for i in range(len(list1)))
 
 def part_b(data):
     list1, list2 = parse_data(data)

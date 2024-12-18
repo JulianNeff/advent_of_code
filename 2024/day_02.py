@@ -1,21 +1,13 @@
-# Copied from: https://github.com/michaelerne/adventofcode-2024/blob/main/template.py
-
 from run_util import run_puzzle
 
 def parse_data(data):
     return [list(map(int, line.split())) for line in data.splitlines()]
 
 def check_valid(lst, inc: bool) -> int:
-    for i in range(len(lst) - 1):
-        diff = lst[i + 1] - lst[i]
-        
-        if inc:
-            if diff < 1 or diff > 3:
-                return 0
-        else:
-            if diff > -1 or diff < -3:
-                return 0
-    return 1
+    if inc:
+        return all(1 <= lst[i + 1] - lst[i] <= 3 for i in range(len(lst) - 1))
+    else:
+        return all(-3 <= lst[i + 1] - lst[i] <= -1 for i in range(len(lst) - 1))
 
 def is_safe_with_dampener(line) -> int:
     if check_valid(line, inc=True) or check_valid(line, inc=False):

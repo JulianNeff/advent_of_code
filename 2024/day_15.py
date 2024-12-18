@@ -2,8 +2,8 @@ from run_util import run_puzzle
 
 DIRECTIONS = {"^": (-1, 0), "v": (1, 0), ">": (0, 1), "<": (0, -1)}
 
-
 def parse_data(data, part_b=False):
+    
     grid, instructions = data.split("\n\n")
     matrix = [list(line) for line in grid.splitlines()]
     instructions = instructions.replace("\n", "")
