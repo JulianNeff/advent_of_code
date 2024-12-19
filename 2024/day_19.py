@@ -3,6 +3,8 @@ from collections import deque
 from typing import List
 
 class AhoCorasick:
+    # Motivated by: https://github.com/michaelerne/adventofcode-2024/blob/main/day_19.py
+    
     def __init__(self, patterns: List[str] = None):
         self.trie = [{}]
         self.fail = [0]
