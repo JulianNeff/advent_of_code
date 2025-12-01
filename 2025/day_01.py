@@ -2,50 +2,49 @@ from run_util import run_puzzle
 
 
 def parse_data(data):
-    lines = data.strip().split("\n")
-    moves = [(line[0], int(line[1:])) for line in lines]
-    return moves
+    return [(line[0], int(line[1:])) for line in data.strip().split("\n")]
 
 
-def part_a(data):
+def solve(data, count_crossings):
     moves = parse_data(data)
     position = 50
     count = 0
 
     for direction, distance in moves:
-        if direction == "L":
-            position -= distance
-        else:
-            position += distance
-
-        position %= 100
-        if position == 0:
-            count += 1
+        count, position = count_crossings(count, position, direction, distance)
 
     return count
+
+
+def count_a(count, position, direction, distance):
+    step = -1 if direction == "L" else 1
+    position = (position + step * distance) % 100
+    return count + (position == 0), position
+
+
+def count_b(count, position, direction, distance):
+    count += distance // 100
+    distance %= 100
+
+    if distance > 0:
+        if direction == "L":
+            crossed = 0 < position <= distance
+            position = (position - distance) % 100
+        else:
+            crossed = position + distance >= 100
+            position = (position + distance) % 100
+        
+        count += crossed
+
+    return count, position
+
+
+def part_a(data):
+    return solve(data, count_a)
 
 
 def part_b(data):
-    moves = parse_data(data)
-    position = 50
-    count = 0
-
-    for direction, distance in moves:        
-        count += distance // 100
-        distance %= 100
-
-        if distance == 0:
-            continue
-
-        if direction == "L":
-            if 0 < position <= distance:
-                count += 1
-            position = (position - distance) % 100
-        else:
-            if position + distance >= 100:
-                count += 1
-            position = (position + distance) % 100
-    return count
+    return solve(data, count_b)
 
 
 def main():
