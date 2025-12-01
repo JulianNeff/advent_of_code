@@ -26,15 +26,14 @@ def count_b(count, position, direction, distance):
     count += distance // 100
     distance %= 100
 
-    if distance > 0:
-        if direction == "L":
-            crossed = 0 < position <= distance
-            position = (position - distance) % 100
-        else:
-            crossed = position + distance >= 100
-            position = (position + distance) % 100
-        
-        count += crossed
+    if direction == "L":
+        crossed = 0 < position <= distance
+        position = (position - distance) % 100
+    else:
+        crossed = position + distance >= 100
+        position = (position + distance) % 100
+    
+    count += crossed
 
     return count, position
 
