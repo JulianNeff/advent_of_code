@@ -1,8 +1,10 @@
-from typing import Callable
+import bisect
+import itertools
+from typing import List, Tuple, Set, Callable
 from run_util import run_puzzle
 
 
-def parse_data(data: str) -> list[(int, int)]:
+def parse_data(data: str) -> List[Tuple[int, int]]:
     return [tuple(map(int, pair.split('-'))) for pair in data.strip().split(',')]
 
 
@@ -15,22 +17,76 @@ def is_invalid_repeated(s: str) -> bool:
     return s in (s + s)[1:-1]
 
 
-def solve(data: str, is_invalid: callable) -> int:
-    data = parse_data(data)
+def generate_valid_numbers(max_digits: int, include_repeated: bool) -> Set[int]:
+    valid_numbers = set()
+
+    for half_len in range(1, max_digits // 2 + 1):
+        multiplier = 10**half_len + 1
+        start = 10**(half_len - 1)
+        end = 10**half_len
+        for i in range(start, end):
+            valid_numbers.add(i * multiplier)
+
+    if include_repeated:
+        for total_len in range(1, max_digits + 1):
+            for sub_len in range(1, total_len // 2 + 1):
+                if total_len % sub_len == 0:
+                    k = total_len // sub_len
+                    if k <= 2:
+                        continue
+
+                    multiplier = sum(10**(p * sub_len) for p in range(k))
+                    start = 10**(sub_len - 1)
+                    end = 10**sub_len
+                    for i in range(start, end):
+                        valid_numbers.add(i * multiplier)
+    
+    return valid_numbers
+
+
+def solve_brute_force(ranges: List[Tuple[int, int]], predicate: Callable[[str], bool]) -> int:
     count = 0
-    for start, end in data:
+    for start, end in ranges:
         for n in range(start, end + 1):
-            if is_invalid(str(n)):
+            if predicate(str(n)):
                 count += n
     return count
 
 
+def solve_optimized(ranges: List[Tuple[int, int]], is_part_a: bool) -> int:
+    max_val = max(end for _, end in ranges)
+    max_digits = len(str(max_val))
+    
+    valid_numbers = generate_valid_numbers(max_digits, not is_part_a)
+    sorted_valid = sorted(valid_numbers)
+    prefix_sums = [0] + list(itertools.accumulate(sorted_valid))
+
+    total = 0
+    for start, end in ranges:
+        left = bisect.bisect_left(sorted_valid, start)
+        right = bisect.bisect_right(sorted_valid, end)
+        total += prefix_sums[right] - prefix_sums[left]
+    return total
+
+
+def solve(data: str, is_part_a: bool) -> int:
+    ranges = parse_data(data)
+    total_range_size = sum(end - start for start, end in ranges)
+    
+    # Heuristic: Use brute force for small ranges, optimized for large ones
+    if total_range_size < 10**6:
+        predicate = is_invalid_twice if is_part_a else is_invalid_repeated
+        return solve_brute_force(ranges, predicate)
+    else:
+        return solve_optimized(ranges, is_part_a)
+
+
 def part_a(data: str) -> int:
-    return solve(data, is_invalid_twice)
+    return solve(data, True)
 
 
 def part_b(data: str) -> int:
-    return solve(data, is_invalid_repeated)
+    return solve(data, False)
 
 
 def main():
