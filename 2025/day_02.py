@@ -4,20 +4,20 @@ from typing import List, Tuple, Set, Callable
 from run_util import run_puzzle
 
 
-def parse_data(data: str) -> List[Tuple[int, int]]:
+def parse_data(data):
     return [tuple(map(int, pair.split('-'))) for pair in data.strip().split(',')]
 
 
-def is_invalid_twice(s: str) -> bool:
+def is_invalid_twice(s):
     mid, remainder = divmod(len(s), 2)
     return remainder == 0 and s[:mid] == s[mid:]
 
 
-def is_invalid_repeated(s: str) -> bool:
+def is_invalid_repeated(s):
     return s in (s + s)[1:-1]
 
 
-def generate_valid_numbers(max_digits: int, include_repeated: bool) -> Set[int]:
+def generate_valid_numbers(max_digits, include_repeated):
     valid_numbers = set()
 
     for half_len in range(1, max_digits // 2 + 1):
@@ -44,7 +44,7 @@ def generate_valid_numbers(max_digits: int, include_repeated: bool) -> Set[int]:
     return valid_numbers
 
 
-def solve_brute_force(ranges: List[Tuple[int, int]], predicate: Callable[[str], bool]) -> int:
+def solve_brute_force(ranges, predicate):
     count = 0
     for start, end in ranges:
         for n in range(start, end + 1):
@@ -53,7 +53,7 @@ def solve_brute_force(ranges: List[Tuple[int, int]], predicate: Callable[[str], 
     return count
 
 
-def solve_optimized(ranges: List[Tuple[int, int]], is_part_a: bool) -> int:
+def solve_optimized(ranges, is_part_a):
     max_val = max(end for _, end in ranges)
     max_digits = len(str(max_val))
     
@@ -69,7 +69,7 @@ def solve_optimized(ranges: List[Tuple[int, int]], is_part_a: bool) -> int:
     return total
 
 
-def solve(data: str, is_part_a: bool) -> int:
+def solve(data, is_part_a):
     ranges = parse_data(data)
     total_range_size = sum(end - start for start, end in ranges)
     
@@ -81,11 +81,11 @@ def solve(data: str, is_part_a: bool) -> int:
         return solve_optimized(ranges, is_part_a)
 
 
-def part_a(data: str) -> int:
+def part_a(data):
     return solve(data, True)
 
 
-def part_b(data: str) -> int:
+def part_b(data):
     return solve(data, False)
 
 
