@@ -1,59 +1,27 @@
 from run_util import run_puzzle
+import numpy as np
+from scipy.signal import convolve2d
 
 def parse_data(data):
-    data = data.splitlines()
-    matrix = []
-    for line in data:
-        row = []
-        for char in line:
-            if char == '@':
-                row.append(1)
-            else:
-                row.append(0)
-        matrix.append(row)
-
-    return matrix
+    grid = np.array([[*x.strip()] for x in data.splitlines()]) == '@'
+    return grid, grid.copy()
 
 
-def count_adjacent_ones(matrix, row, col):
-    count = 0
-    for i in range(max(0, row-1), min(len(matrix), row+2)):
-        for j in range(max(0, col-1), min(len(matrix[0]), col+2)):
-            if (i != row or j != col) and matrix[i][j] == 1:
-                count += 1    
-    return count
-
-
-def can_be_removed(matrix, row, col):
-    to_remove = []
-    for i in range(0, len(matrix)):
-        for j in range(0, len(matrix[0])):
-            if matrix[i][j] == 1:
-                if count_adjacent_ones(matrix, i, j) < 4:
-                    to_remove.append((i, j))
-    return to_remove
+def solve(data, iterations):
+    grid, orig = parse_data(data)
+    
+    for i in range(101):
+        grid &= convolve2d(grid, np.ones((3,3)), mode='same') > 4
+        if i == iterations:
+            return orig.sum() - grid.sum()
 
 
 def part_a(data):
-    matrix = parse_data(data)   
-    return len(can_be_removed(matrix, 0, 0))
+    return solve(data, 0)
 
 
 def part_b(data):
-    matrix = parse_data(data)
-
-    count = 0
-    changed = True
-    while changed:
-        changed = False
-        to_remove = can_be_removed(matrix, 0, 0)
-        if to_remove:
-            changed = True
-            count += len(to_remove)
-
-        for i, j in to_remove:  
-            matrix[i][j] = 0
-    return count
+    return solve(data, 100)
 
 
 def print_matrix(matrix):  
