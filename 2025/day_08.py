@@ -1,68 +1,65 @@
 from run_util import run_puzzle
-
-def parse_data(data):
-    # return as int
-    return [(i, list(map(int, line.split(',')))) for i, line in enumerate(data.splitlines())]
+from collections import defaultdict
 
 
-def get_distances(nodes):
+def parse_data(data: str):
+    coords = [tuple(map(int, line.split(','))) for line in data.splitlines()]
+    distances = get_distances(coords)
+    nr_coords = len(coords)
+    union_find = list(range(nr_coords))
+    return coords, distances, nr_coords, union_find
+
+
+def get_distances(coords):
     distances = []
-    for i in range(len(nodes)):
-        for j in range(i + 1, len(nodes)):
-            n1 = nodes[i]
-            n2 = nodes[j]
-            x1, y1, z1 = n1[1]
-            x2, y2, z2 = n2[1]
-            dist = (x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2
-            distances.append((dist, i, j))
-    distances.sort()
-    return distances
-
-def part_a(data):
-    nodes = parse_data(data)
-    distances = get_distances(nodes)
-
-    connections = 10 if len(nodes) == 20 else 1000
-    team = [i for i in range(len(nodes))]
-
-    for connection in range(connections):
-        dist, i, j = distances[connection]
-        lower = min(team[i], team[j])
-        higher = max(team[i], team[j])
-
-        for k in range(len(team)):
-            if team[k] == higher:
-                team[k] = lower
+    for i, (x1, y1, z1) in enumerate(coords):
+        for j in range(i + 1, len(coords)):
+            x2, y2, z2 = coords[j]
+            dist_sq = (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
+            distances.append((dist_sq, i, j))
+    
+    return sorted(distances)
 
 
-    team_count = {}
-    for member in team:
-        if member not in team_count:
-            team_count[member] = 0
-        team_count[member] += 1
-
-    largest_3_teams = sorted(team_count.values(), reverse=True)[:3]
-
-    return largest_3_teams[0] * largest_3_teams[1] * largest_3_teams[2]
+def find(parent: list, x: int) -> int:
+    if parent[x] != x:
+        parent[x] = find(parent, parent[x])
+    return parent[x]
 
 
-def part_b(data):
-    nodes = parse_data(data)
-    distances = get_distances(nodes)
-    team = [i for i in range(len(nodes))]
-
-    for connection in range(len(distances)):
-        dist, i, j = distances[connection]
-        lower = min(team[i], team[j])
-        higher = max(team[i], team[j])
+def union(parent: list, x: int, y: int) -> None:
+    px, py = find(parent, x), find(parent, y)
+    if px != py:
+        parent[px] = py
 
 
-        for k in range(len(team)):
-            if team[k] == higher:
-                team[k] = lower
+def part_a(data: str) -> int:
+    coords, distances, nr_coords, union_find = parse_data(data)
+    iterations = 10 if nr_coords == 20 else 1000
 
-        if all(x == 0 for x in team):
-            return nodes[i][1][0] * nodes[j][1][0]
+    for i in range(iterations):
+        _, x, y = distances[i]
+        union(union_find, x, y)
+
+    roots = [find(union_find, i) for i in range(nr_coords)]
+    team_sizes = sorted(defaultdict(int, ((r, roots.count(r)) for r in set(roots))).values())
+    
+    return team_sizes[-1] * team_sizes[-2] * team_sizes[-3]
+
+
+def part_b(data: str) -> int:
+    coords, distances, nr_coords, union_find = parse_data(data)
+    connections = 0
+
+    for dist_sq, x, y in distances:
+        px, py = find(union_find, x), find(union_find, y)
+        if px != py:
+            connections += 1
+            if connections == nr_coords - 1:
+                return coords[x][0] * coords[y][0]
+            union_find[px] = py
+
+    return -1
 
 
 def main():
