@@ -28,21 +28,13 @@ def prefix_sum_area(prefix_grid, x1, y1, x2, y2):
 
 def part_a(input_text):
     red_tiles = parse_data(input_text)
-    max_x, max_y = 10000, 10000
 
-    top_left, bottom_right = (max_x, max_y), (0, 0)
-    bottom_left, top_right = (max_x, 0), (0, max_y)
-
-    for x, y in red_tiles:
-        top_left = nearer_point((0, 0), top_left, (x, y))
-        bottom_right = nearer_point((max_x, max_y), bottom_right, (x, y))
-        bottom_left = nearer_point((0, max_y), bottom_left, (x, y))
-        top_right = nearer_point((max_x, 0), top_right, (x, y))
-
-    return max(
-        rectangle_area_from_corners(top_left, bottom_right),
-        rectangle_area_from_corners(bottom_left, top_right),
-    )
+    total_area = 0
+    for (x1, y1) in red_tiles:
+        for (x2, y2) in red_tiles:
+            total_area = max(total_area, rectangle_area_from_corners((x1, y1), (x2, y2)))
+    
+    return total_area
 
 
 def part_b(input_text):
