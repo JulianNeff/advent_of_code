@@ -1,6 +1,7 @@
 from run_util import run_puzzle
 from z3 import Optimize, Int, Sum, sat
 
+
 def parse_data(data):
     lines = data.splitlines()
 
@@ -29,57 +30,52 @@ def parse_data(data):
         })
 
     return machines
-
-
-def count_moves(machine):
-    moves = {0: 0}
-    buttons = [sum(2**i for i in button) for button in machine['buttons']]
-    
-    for button in buttons:
-        update = True
-
-        while update:
-            update = False
-
-            for move in moves.copy():
-                new_state = move ^ button
-
-                if (new_state not in moves) or (moves[new_state] > moves[move] + 1):
-                    moves[new_state] = moves[move] + 1
-                    update = True
-
-    return moves[machine['lights']]
-
-def solve_b(machine):
-    opt = Optimize()
-
-    vars = [Int(f"x_{i}") for i in range(len(machine["buttons"]))]
-
-    for v in vars: opt.add(v >= 0)
-
-    for i, j in enumerate(machine["joltage"]):
-        opt.add(Sum(vars[k] for k, b in enumerate(machine["buttons"]) if i in b) == j)
-
-    opt.minimize(Sum(vars))
-    if opt.check() != sat: raise ValueError("No solution found")
-    
-    m = opt.model()
-    return sum(m[v].as_long() for v in vars)
     
 
 def part_a(data):
     machines = parse_data(data)
     total_moves = 0
+    
     for machine in machines:
-        total_moves += count_moves(machine)
+        moves = {0: 0}
+        buttons = [sum(2**i for i in button) for button in machine['buttons']]
+
+        for button in buttons:
+            update = True
+
+            while update:
+                update = False
+
+                for move in moves.copy():
+                    new_state = move ^ button
+
+                    if (new_state not in moves) or (moves[new_state] > moves[move] + 1):
+                        moves[new_state] = moves[move] + 1
+                        update = True
+
+        total_moves += moves[machine['lights']]
     return total_moves
 
 
 def part_b(data):
     machines = parse_data(data)
     total_moves = 0
+    opt = Optimize()
+
     for machine in machines:
-        total_moves += solve_b(machine)
+        opt.push()
+        vars = [Int(f"x_{i}") for i in range(len(machine["buttons"]))]
+        for v in vars: opt.add(v >= 0)
+
+        for i, j in enumerate(machine["joltage"]):
+            opt.add(Sum(vars[k] for k, b in enumerate(machine["buttons"]) if i in b) == j)
+
+        opt.minimize(Sum(vars))
+        if opt.check() != sat: raise ValueError("No solution found")
+
+        m = opt.model()
+        total_moves += sum(m[v].as_long() for v in vars)
+        opt.pop()
     return total_moves
 
 
