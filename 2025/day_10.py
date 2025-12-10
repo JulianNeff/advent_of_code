@@ -1,6 +1,4 @@
 from run_util import run_puzzle
-from utils.solution_base import SolutionBase
-from collections import deque
 from z3 import Optimize, Int, Sum, sat
 
 def parse_data(data):
@@ -19,8 +17,7 @@ def parse_data(data):
 
             button_spec = rest[1:end_idx]
             button_indices = [int(x) for x in button_spec.split(',')]
-            button_value = sum(2**i for i in button_indices)
-            button_schematics.append(button_value)
+            button_schematics.append(button_indices)
             
             rest = rest[end_idx+1:].strip()
             
@@ -36,8 +33,9 @@ def parse_data(data):
 
 def count_moves(machine):
     moves = {0: 0}
+    buttons = [sum(2**i for i in button) for button in machine['buttons']]
     
-    for button in machine['buttons']:
+    for button in buttons:
         update = True
 
         while update:
@@ -53,37 +51,21 @@ def count_moves(machine):
     return moves[machine['lights']]
 
 def solve_b(machine):
-    joltage_reqs = machine['joltage']
+    opt = Optimize()
 
-    start = tuple(0 for _ in joltage_reqs)
-    moves = {start: 0}
+    vars = [Int(f"x_{i}") for i in range(len(machine["buttons"]))]
 
-    buttons = []
-    for button in machine['buttons']:
-        end = tuple(0 for _ in joltage_reqs)
-        for idx, char in enumerate(f"{button:b}"[::-1]):
-            if char == '1':
-                end = end[:idx] + (1,) + end[idx+1:]
-        buttons.append(end)
+    for v in vars: opt.add(v >= 0)
 
-    change = True
-    while change:
-        change = False
+    for i, j in enumerate(machine["joltage"]):
+        opt.add(Sum(vars[k] for k, b in enumerate(machine["buttons"]) if i in b) == j)
 
-        for move in moves:
-            new_moves = moves.copy()
-            
-            for button in buttons:
-                new_state = tuple(map(sum, zip(move, button)))
-
-
-                if new_state not in moves or new_moves[new_state] > moves[move] + 1:
-                    if all(new_state[i] <= joltage_reqs[i] for i in range(len(joltage_reqs))):
-                        new_moves[new_state] = moves[move] + 1
-                        change = True
-
-            moves = new_moves
-    return moves[joltage_reqs]
+    opt.minimize(Sum(vars))
+    if opt.check() != sat: raise ValueError("No solution found")
+    
+    m = opt.model()
+    return sum(m[v].as_long() for v in vars)
+    
 
 def part_a(data):
     machines = parse_data(data)
@@ -98,7 +80,6 @@ def part_b(data):
     total_moves = 0
     for machine in machines:
         total_moves += solve_b(machine)
-        print(f"Machine solved in {total_moves} moves")
     return total_moves
 
 
