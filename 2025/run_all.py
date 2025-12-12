@@ -14,8 +14,8 @@ def solve_day_part(day_and_part):
     day, part = day_and_part
     title = f'day {day} - part {part}'
 
-    if day == 25 and part != 'a':
-        return title, None
+    if day == 12 and part != 'a':
+        return title, 0
 
     data = get_data(day=day)
 
